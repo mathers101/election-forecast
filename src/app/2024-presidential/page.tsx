@@ -1,9 +1,12 @@
-import Predictor from "@/components/Predictor";
+import type { Metadata } from "next";
+import PresidentialForecast from "@/components/presidential/presidential-forecast";
+
+export const metadata: Metadata = {
+  title: "2024 Presidential Election",
+  description:
+    "Estimate each state's presidential win probability and see the chance of a Harris or Trump Electoral College victory.",
+};
 
 export default function PresidentialForecastPage() {
-  return (
-    <div className="flex min-h-screen w-full flex-col items-start justify-start gap-5 bg-white py-2 max-sm:gap-4 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-      <Predictor election="presidential" />
-    </div>
-  );
+  return <PresidentialForecast />;
 }

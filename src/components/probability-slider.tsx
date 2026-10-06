@@ -1,25 +1,21 @@
 "use client";
 
-// import { getColorFromProbability } from "@/lib/get-color-from-prob";
-import { partyColors as defaultPartyColors } from "@/data/state-probabilities";
+import { partyColors as defaultPartyColors, type CandidateParty } from "@/data/state-probabilities";
 import * as Slider from "@radix-ui/react-slider";
-import type { SenateParty } from "@/data/senate-2026";
 
 interface ProbabilitySliderProps {
   sliderValue: number[];
   setSliderValue: (value: number[]) => void;
-  election: "presidential" | "senate";
   leftCandidate: string;
-  leftCandidateParty: SenateParty;
+  leftCandidateParty: CandidateParty;
   rightCandidate: string;
-  rightCandidateParty: SenateParty;
-  partyColors?: Record<SenateParty, string>;
+  rightCandidateParty: CandidateParty;
+  partyColors?: Record<CandidateParty, string>;
 }
 
 export default function ProbabilitySlider({
   sliderValue: value,
   setSliderValue: setValue,
-  election,
   leftCandidate,
   leftCandidateParty,
   rightCandidate,
@@ -28,10 +24,8 @@ export default function ProbabilitySlider({
 }: ProbabilitySliderProps) {
   const rightPercent = Math.round(value[0]);
   const leftPercent = Math.round(100 - rightPercent);
-  const leftParty = election === "senate" ? leftCandidateParty ?? "D" : "D";
-  const rightParty = election === "senate" ? rightCandidateParty ?? "R" : "R";
-  const leftColor = partyColors[leftParty];
-  const rightColor = partyColors[rightParty];
+  const leftColor = partyColors[leftCandidateParty];
+  const rightColor = partyColors[rightCandidateParty];
 
   return (
     <div className="flex flex-col items-center gap-4 py-4">
@@ -65,4 +59,3 @@ export default function ProbabilitySlider({
     </div>
   );
 }
-

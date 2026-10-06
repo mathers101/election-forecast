@@ -1,32 +1,32 @@
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
-import ProbabilitySlider from "./ProbabilitySlider";
+import { useEffect, useState, type ReactNode } from "react";
+import ProbabilitySlider from "./probability-slider";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { stateData } from "@/data/static-state-data";
-import { type StateProbability } from "@/data/state-probabilities";
+import { type StateProbability, type CandidateParty } from "@/data/state-probabilities";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { senatePartyColors, type SenateRace } from "@/data/senate-2026";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 
-interface BasicUSAStateProps {
+export type StateContest = {
+  subtitle: ReactNode;
+  leftCandidate: string;
+  leftCandidateParty: CandidateParty;
+  rightCandidate: string;
+  rightCandidateParty: CandidateParty;
+};
+
+interface USAStateProps {
   stateName: string;
   dimensions: string;
   state: string;
   fill: string;
   onSelectState: () => void;
-  isElection: boolean;
-  isOpen: boolean;
-  election: "presidential" | "senate";
-}
-
-interface USAStateProps extends BasicUSAStateProps {
-  onSelectState: () => void;
   onUnselectState: () => void;
   onClearSelection: () => void;
   probability: StateProbability | null;
   setProbability: (prob: StateProbability | null) => void;
-  senateRace?: SenateRace;
+  isOpen: boolean;
+  contest?: StateContest;
 }
 
 const USAState = ({
@@ -39,10 +39,8 @@ const USAState = ({
   onClearSelection,
   probability,
   setProbability,
-  isElection,
   isOpen,
-  election,
-  senateRace,
+  contest,
 }: USAStateProps) => {
   const isMobile = useIsMobile();
   // The slider value always represents the probability of the right-side candidate winning.
@@ -55,14 +53,7 @@ const USAState = ({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSliderValue([(probability?.rightCandidate ?? 0.5) * 100]);
     }
-  }, [isOpen, probability, senateRace?.rightCandidateParty]);
-
-  const numElectoralVotes = stateData[state]?.electoralVotes ?? 0;
-  const incumbentColor = senateRace?.incumbent === "R"
-    ? "text-red-600"
-    : senateRace?.incumbent === "D"
-      ? "text-blue-600"
-      : "text-purple-700";
+  }, [isOpen, probability, contest?.rightCandidateParty]);
 
   const onOpenChange = (open: boolean) => {
     if (open) onSelectState();
@@ -74,50 +65,35 @@ const USAState = ({
   };
 
   const onSave = () => {
+    if (!contest) return;
     const rightCandidateWin = sliderValue[0] / 100;
     const leftCandidateWin = 1 - rightCandidateWin;
     setProbability({
       leftCandidate: leftCandidateWin,
       rightCandidate: rightCandidateWin,
-      leftCandidateParty: election === "senate" ? senateRace!.leftCandidateParty : "D",
-      rightCandidateParty: election === "senate" ? senateRace!.rightCandidateParty : "R",
+      leftCandidateParty: contest.leftCandidateParty,
+      rightCandidateParty: contest.rightCandidateParty,
     });
     onUnselectState();
   };
 
-  const subtitle = election === "senate" ? (
-    <>
-      Incumbent: {senateRace?.incumbentName ? (
-        <span className={`font-medium ${incumbentColor}`}>
-          {senateRace.incumbentName}{senateRace.incumbent ? ` (${senateRace.incumbent})` : ""}
-        </span>
-      ) : (
-        <span>Vacant{senateRace?.formerIncumbentName ? ` (formerly held by ${senateRace.formerIncumbentName})` : ""}</span>
-      )}
-    </>
-  ) : (
-    <>{numElectoralVotes} electoral votes</>
-  );
-
-  const editor = (
+  const editor = contest && (
     <div className={cn("flex flex-col w-full space-y-4", !isMobile && "px-4")}>
       <div className="text-center">
         {isMobile ? <DialogTitle>{stateName}</DialogTitle> : <h3 className="text-lg font-semibold">{stateName}</h3>}
         {isMobile ? (
-          <DialogDescription>{subtitle}</DialogDescription>
+          <DialogDescription>{contest.subtitle}</DialogDescription>
         ) : (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{contest.subtitle}</p>
         )}
       </div>
       <ProbabilitySlider
         sliderValue={sliderValue}
         setSliderValue={setSliderValue}
-        election={election}
-        leftCandidate={senateRace?.leftCandidate ?? "Harris"}
-        leftCandidateParty={senateRace?.leftCandidateParty ?? "D"}
-        rightCandidate={senateRace?.rightCandidate ?? "Trump"}
-        rightCandidateParty={senateRace?.rightCandidateParty ?? "R"}
-        partyColors={senatePartyColors}
+        leftCandidate={contest.leftCandidate}
+        leftCandidateParty={contest.leftCandidateParty}
+        rightCandidate={contest.rightCandidate}
+        rightCandidateParty={contest.rightCandidateParty}
       />
       <div className="flex ml-auto space-x-2">
         <Button type="button" variant="outline" onClick={onClickCancel} className="hover:cursor-pointer">
@@ -146,7 +122,7 @@ const USAState = ({
     </path>
   );
 
-  if (!isElection) {
+  if (!contest) {
     return (
       <path d={dimensions} fill={fill} data-name={state} className="cursor-default" onClick={onClearSelection}>
         <title>{stateName}</title>

@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
-export default function Home() {
-  redirect("/2026-senate");
+export default async function Home() {
+  permanentRedirect("/2026-senate");
 }

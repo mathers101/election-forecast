@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { TransformComponent, TransformWrapper, useControls, type ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
-import USAState from "./USAState";
+import USAState, { type StateContest } from "./usa-state";
 import { stateData, type State } from "../data/static-state-data";
 import type { StateProbabilities, StateProbability } from "@/data/state-probabilities";
-import type { SenateRace } from "@/data/senate-2026";
 
 // Long enough for the zoom-out to be visible, short of the full 500ms transform.
 const ZOOM_OUT_BEFORE_NEXT_MS = 200;
@@ -46,9 +45,7 @@ interface USAMapProps {
   customize?: Partial<Record<State, CustomizeConfig>>;
   stateProbabilities: StateProbabilities;
   setStateProbability: (state: State, prob: StateProbability | null) => void;
-  electionStates: Set<string>;
-  election: "presidential" | "senate";
-  senateRaces: Partial<Record<State, SenateRace>>;
+  contests: Partial<Record<State, StateContest>>;
 }
 
 const USAMap = ({
@@ -60,9 +57,7 @@ const USAMap = ({
   customize = {},
   stateProbabilities,
   setStateProbability,
-  electionStates,
-  election,
-  senateRaces,
+  contests,
 }: USAMapProps) => {
   const [openState, setOpenState] = useState<State | null>(null);
   const [mapZoomed, setMapZoomed] = useState(false);
@@ -196,15 +191,13 @@ const USAMap = ({
                       dimensions={data.dimensions ?? ""}
                       state={stateKey as State}
                       fill={fillStateColor(stateKey as State)}
-                      isElection={electionStates.has(stateKey)}
                       isOpen={openState === stateKey}
-                      election={election}
                       onSelectState={() => handleStateClick(stateKey as State)}
                       onUnselectState={() => dismiss(stateKey as State)}
                       onClearSelection={() => dismiss()}
                       probability={stateProbabilities[stateKey as State]}
                       setProbability={setProbabilityByState(stateKey as State)}
-                      senateRace={senateRaces[stateKey as State]}
+                      contest={contests[stateKey as State]}
                     />
                   ))}
                 </g>
