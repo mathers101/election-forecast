@@ -135,7 +135,7 @@ export default function SenateExpectedSeats({ pdfs }: { pdfs: SenateSeatPdfs }) 
         <h2 className="mb-1 text-lg font-semibold">Expected seats</h2>
         <p className="mb-3 text-sm text-muted-foreground">Expected number of seats for each party</p>
         <ChartContainer config={chartConfig} className="aspect-auto h-60 w-full min-w-0 max-w-full sm:h-75">
-          <BarChart accessibilityLayer data={chartData} margin={{ top: 8, right: 20, left: 0, bottom: 4 }}>
+          <BarChart data={chartData} margin={{ top: 8, right: 20, left: 0, bottom: 4 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="party"

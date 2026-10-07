@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SenateForecast from "@/components/senate/senate-forecast";
+import { senate2026Races } from "@/data/senate-2026";
 
 export const metadata: Metadata = {
   title: "2026 Senate",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function SenateForecastPage() {
-  return <SenateForecast />;
+  return <SenateForecast senateRaces={senate2026Races} />;
 }

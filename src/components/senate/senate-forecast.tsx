@@ -1,8 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { initialStateProbabilities, type StateProbabilities, type StateProbability } from "../../data/state-probabilities";
-import { initialSenateProbabilities, senate2026Incumbents, senate2026Races, senateForecastSources, defaultSenateRaceRatingProbabilities, type SenateForecastSourceId, type SenateRace, type SenateRaceRating, type SenateRatingProbabilities } from "../../data/senate-2026";
+import {
+  initialStateProbabilities,
+  type StateProbabilities,
+  type StateProbability,
+} from "../../data/state-probabilities";
+import {
+  initialSenateProbabilities,
+  senate2026Incumbents,
+  senateForecastSources,
+  defaultSenateRaceRatingProbabilities,
+  type SenateForecastSourceId,
+  type SenateRace,
+  type SenateRaceRating,
+  type SenateRatingProbabilities,
+} from "../../data/senate-2026";
 import USAMap, { type CustomizeConfig } from "../usa-map";
 import { type State } from "../../data/static-state-data";
 import { getColorFromProbability } from "@/lib/get-color-from-prob";
@@ -11,6 +24,7 @@ import SenateSeatDistribution from "./senate-seat-distribution";
 import SenateProbabilities from "./senate-probabilities";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Slider } from "../ui/slider";
 import type { StateContest } from "../usa-state";
 
@@ -24,27 +38,28 @@ const senateStateProbabilities = (
   ratingProbabilities: SenateRatingProbabilities,
 ): StateProbabilities => {
   const defaults = initialSenateProbabilities(sourceId, ratingProbabilities);
-  const entries = Object.fromEntries(Object.keys(senate2026Incumbents).map((state) => [state, defaults[state as State]]));
-  return Object.fromEntries(Object.keys(initialStateProbabilities).map((state) => [state, entries[state] ?? null])) as StateProbabilities;
+  const entries = Object.fromEntries(
+    Object.keys(senate2026Incumbents).map((state) => [state, defaults[state as State]]),
+  );
+  return Object.fromEntries(
+    Object.keys(initialStateProbabilities).map((state) => [state, entries[state] ?? null]),
+  ) as StateProbabilities;
 };
 
 const sameProbability = (left: StateProbability | null, right: StateProbability | null) =>
-  !!left && !!right
-  && left.leftCandidate === right.leftCandidate
-  && left.rightCandidate === right.rightCandidate;
+  !!left && !!right && left.leftCandidate === right.leftCandidate && left.rightCandidate === right.rightCandidate;
 
 function SenateRaceSubtitle({ race }: { race: SenateRace }) {
-  const incumbentColor = race.incumbent === "R"
-    ? "text-red-600"
-    : race.incumbent === "D"
-      ? "text-blue-600"
-      : "text-purple-700";
+  const incumbentColor =
+    race.incumbent === "R" ? "text-red-600" : race.incumbent === "D" ? "text-blue-600" : "text-purple-700";
 
   return (
     <>
-      Incumbent: {race.incumbentName ? (
+      Incumbent:{" "}
+      {race.incumbentName ? (
         <span className={`font-medium ${incumbentColor}`}>
-          {race.incumbentName}{race.incumbent ? ` (${race.incumbent})` : ""}
+          {race.incumbentName}
+          {race.incumbent ? ` (${race.incumbent})` : ""}
         </span>
       ) : (
         <span>Vacant{race.formerIncumbentName ? ` (formerly held by ${race.formerIncumbentName})` : ""}</span>
@@ -53,12 +68,13 @@ function SenateRaceSubtitle({ race }: { race: SenateRace }) {
   );
 }
 
-export default function SenateForecast() {
+export default function SenateForecast({ senateRaces }: { senateRaces: Partial<Record<State, SenateRace>> }) {
   const [ratingProbabilities, setRatingProbabilities] = useState(() => defaultSenateRaceRatingProbabilities());
   const [senateSourceId, setSenateSourceId] = useState<SenateForecastSourceId>("consensus");
   const [showRatingProbabilityControls, setShowRatingProbabilityControls] = useState(false);
-  const senateRaces = useMemo(() => senate2026Races(), []);
-  const [probabilities, setProbabilities] = useState<StateProbabilities>(() => senateStateProbabilities("consensus", ratingProbabilities));
+  const [probabilities, setProbabilities] = useState<StateProbabilities>(() =>
+    senateStateProbabilities("consensus", ratingProbabilities),
+  );
   const startingProbabilities = useMemo(
     () => senateStateProbabilities(senateSourceId, ratingProbabilities),
     [senateSourceId, ratingProbabilities],
@@ -67,8 +83,9 @@ export default function SenateForecast() {
 
   useEffect(() => {
     const previous = previousRatingProbabilities.current;
-    const hasChanged = (Object.keys(ratingProbabilities) as SenateRaceRating[])
-      .some((rating) => ratingProbabilities[rating] !== previous[rating]);
+    const hasChanged = (Object.keys(ratingProbabilities) as SenateRaceRating[]).some(
+      (rating) => ratingProbabilities[rating] !== previous[rating],
+    );
     if (!hasChanged) return;
     previousRatingProbabilities.current = ratingProbabilities;
     const previousDefaults = senateStateProbabilities(senateSourceId, previous);
@@ -95,9 +112,7 @@ export default function SenateForecast() {
   const hasMapEdits = Object.keys(senate2026Incumbents).some((state) => {
     const current = probabilities[state as State];
     const starting = startingProbabilities[state as State];
-    return current && starting
-      ? !sameProbability(current, starting)
-      : current !== starting;
+    return current && starting ? !sameProbability(current, starting) : current !== starting;
   });
 
   const contests = useMemo(() => {
@@ -145,14 +160,20 @@ export default function SenateForecast() {
   ];
 
   return (
-    <main className="mx-auto flex w-full max-w-375 flex-col gap-5 px-4 py-6 text-left sm:px-6 lg:px-8">
+    <main className="mx-auto flex w-full max-w-375 flex-col gap-10 px-4 py-6 text-left sm:px-6 lg:px-8">
       <section className="space-y-3" aria-labelledby="election-title">
         <h1 id="election-title" className="text-4xl font-bold text-gray-900">
           2026 Senate Forecast
         </h1>
         <div className="space-y-2 text-sm text-muted-foreground">
-          <p>Select a state on the map and use its slider to estimate the probability for each candidate in that Senate race.</p>
-          <p>These estimates determine the probability of either party winning a majority in the Senate. States without a 2026 Senate race are gray.</p>
+          <p>
+            Select a state on the map and use its slider to estimate the probability for each candidate in that Senate
+            race.
+          </p>
+          <p>
+            These estimates determine the probability of either party winning a majority in the Senate. States without a
+            2026 Senate race are gray.
+          </p>
         </div>
       </section>
 
@@ -174,30 +195,38 @@ export default function SenateForecast() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <select
-                id="senate-forecast-source"
-                className="h-8 w-full rounded-none border border-input bg-transparent px-2.5 text-xs text-foreground outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
+              <Select
                 value={senateSourceId}
-                onChange={(event) => {
-                  const sourceId = event.target.value as SenateForecastSourceId;
-                  setSenateSourceId(sourceId);
-                  setProbabilities(senateStateProbabilities(sourceId, ratingProbabilities));
+                onValueChange={(sourceId) => {
+                  const nextSourceId = sourceId as SenateForecastSourceId;
+                  setSenateSourceId(nextSourceId);
+                  setProbabilities(senateStateProbabilities(nextSourceId, ratingProbabilities));
                 }}
               >
-                {Object.entries(senateForecastSources).map(([sourceId, source]) => (
-                  <option key={sourceId} value={sourceId}>{source.label}</option>
-                ))}
-              </select>
+                <SelectTrigger id="senate-forecast-source" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(senateForecastSources).map(([sourceId, source]) => (
+                    <SelectItem key={sourceId} value={sourceId}>
+                      {source.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <CardDescription>
                 As of {senateForecastSources[senateSourceId].asOf}.{" "}
-                <a href={senateForecastSources[senateSourceId].url} target="_blank" rel="noreferrer" className="underline hover:text-foreground">
+                <a
+                  href={senateForecastSources[senateSourceId].url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline hover:text-foreground"
+                >
                   View source map
                 </a>
                 .
               </CardDescription>
-              <CardDescription>
-                Switching maps resets any edits made to the map.
-              </CardDescription>
+              <CardDescription>Switching maps resets any edits made to the map.</CardDescription>
               <Button
                 type="button"
                 variant="outline"
@@ -211,7 +240,8 @@ export default function SenateForecast() {
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-3">
               <CardDescription>
-                Many of the source maps categorize states in terms of Safe, Likely, Lean, Tilt, and Toss-up. We convert these into probabilities for each candidate.
+                Many of the source maps categorize states in terms of Safe, Likely, Lean, Tilt, and Toss-up. We convert
+                these into probabilities for each candidate.
               </CardDescription>
               <CardDescription>
                 Click{" "}
@@ -254,7 +284,10 @@ export default function SenateForecast() {
                       />
                     </div>
                   ))}
-                  <CardDescription>Toss-up remains 50%. These settings apply to rating-based maps; FiftyPlusOne&apos;s published odds are used directly.</CardDescription>
+                  <CardDescription>
+                    Toss-up remains 50%. These settings apply to rating-based maps; FiftyPlusOne&apos;s published odds
+                    are used directly.
+                  </CardDescription>
                 </div>
               )}
             </CardFooter>
